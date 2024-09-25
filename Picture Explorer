@@ -1,0 +1,207 @@
+from customtkinter import *
+import os
+from PIL import Image,ImageTk
+from tkinter import messagebox
+
+class Image_Viewer:
+    # apperance
+    def __init__(self):
+        set_appearance_mode("dark")
+        self.app = CTk()
+        self.app.geometry("1000x700")
+        self.app.title("Image Viewer")
+        self.app.resizable(False,False)
+# Initialize variables
+        self.file_path = os.path.dirname(os.path.realpath(__file__)) 
+        self.image_list = []          # List to store image file paths
+        self.current_index = 0   
+        self.slide = False    
+#File to be used in the Program
+        self.file_path = os.path.dirname(os.path.realpath(__file__))        
+        self.Image_img = CTkImage(Image.open(self.file_path + "/photos_img.png"),size=(100,100))
+        self.left_arrow = CTkImage(Image.open(self.file_path + "/arrow_left.png"),size=(50,50))
+        self.right_arrow = CTkImage(Image.open(self.file_path + "/arrow_right.png"),size=(50,50))
+        self.exit_img = CTkImage(Image.open(self.file_path + "/exit.png"),size=(48,48))
+ #Heading
+        self.logo_label = CTkLabel(master=self.app,
+                                   text="",
+                                   image=self.Image_img,
+                                   compound="center")
+        self.logo_label.place(relx=0.01,rely=0.01)
+
+        self.header_label = CTkLabel(master=self.app,
+                                height=500,
+                                width=200,
+                                text="Pic Explorer",
+                                text_color="#76BBFB",
+                                font=("Great Vibes",60,"bold"))
+        self.header_label.place(relx=0.5,rely=0.07,anchor=CENTER)
+# Main frame for Image
+        self.Main_frame = CTkFrame(master=self.app,
+                                   width=600,
+                                   height=400,
+                                   corner_radius=12,
+                                   border_width=2,
+                                   border_color="white",
+                                   fg_color="transparent")
+        self.Main_frame.place(relx=0.5,rely=0.5,anchor=CENTER)
+# Label for showing image in main frame
+        self.image_label = CTkLabel(master=self.Main_frame,text="No Image is Selected Yet\nPlease select any Image\n Directories first")
+        self.image_label.place(relx=0.5,rely=0.5,anchor=CENTER)
+# Previous frame for Image
+        self.previous_frame = CTkFrame(master=self.app,
+                                       width=180,
+                                        height=400,
+                                        corner_radius=12,
+                                        border_width=2,
+                                        border_color="orange",
+                                        )
+        self.previous_frame.place(relx=0.001,rely=0.5,anchor=W)
+# Label for showing image in previous [0] frame
+        self.image_0_label = CTkLabel(master=self.previous_frame,text="No image \nselected.")
+        self.image_0_label.place(relx=0.3,rely=0.5,anchor=CENTER)
+# Forward frame for Image
+        self.forward_frame = CTkFrame(master=self.app,
+                                      width=180,
+                                      height=400,
+                                      corner_radius=12,
+                                      border_width=2,
+                                      border_color="green")
+        self.forward_frame.place(relx=1,rely=0.5,anchor=E)
+# Label for showing Image in forward [1] frame
+        self.image_1_label = CTkLabel(master=self.forward_frame,text="No Image \nselected.")
+        self.image_1_label.place(relx=0.7,rely=0.5,anchor=CENTER)
+#adding arrows for sliding images
+       #Left arrow 
+        self.left_arrow_button = CTkButton(master=self.previous_frame,
+                                           width=20,
+                                           text="",
+                                           fg_color="transparent",
+                                           hover_color="#E39A65",
+                                           image=self.left_arrow,
+                                           command=self.show_previous_image)
+        self.left_arrow_button.place(relx=0.6,rely=0.5,anchor=W)
+        # Right arrow
+        self.right_arrow_button = CTkButton(master=self.forward_frame,
+                                           width=20,
+                                           text="",
+                                           fg_color="transparent",
+                                           hover_color="green",
+                                           image=self.right_arrow,
+                                           command=self.show_next_image)
+        self.right_arrow_button.place(relx=0.4,rely=0.5,anchor = E)
+
+        #Button for opening Folders
+        self.open_folder_b = CTkButton(master=self.app,
+                                       height=45,
+                                       width=150,
+                                       corner_radius=12,
+                                       text="Open Folder",
+                                       text_color="white",
+                                       font=("Neon Lights",20,"normal"),
+                                       command=self.open_folder)
+        self.open_folder_b.place(relx=0.3,rely=0.9)
+        
+        # Button for slide show
+        self.slide_show_b = CTkButton(master=self.app,
+                                      text="Slide Show",
+                                      text_color="white",
+                                      height=45,
+                                      width=150,
+                                      corner_radius=12,
+                                      font=("Raleway",18,"bold"),
+                                      command=self.slide_show)
+        self.slide_show_b.place(relx=0.5,rely=0.9)
+  #    Button for Exiting from Program
+        self.exit_button = CTkButton(master=self.app,
+                                     width=50,
+                                     height=45,
+                                     text="",
+                                     fg_color="white",
+                                     image=self.exit_img,
+                                     command= lambda: exit())
+        self.exit_button.place(relx=0.9,rely=0.9)
+        self.app.mainloop()
+        
+    def open_folder(self):
+        if self.image_list:
+                        self.image_list.clear()
+        # Open a file dialog to select a directory
+        directory = filedialog.askdirectory(title="Select Directory")
+        # Supported image extensions
+        image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff')
+
+        # Walk through the directory and append image paths to the list
+        for root_dir, _, files in os.walk(directory):
+                for file in files:
+                        if file.lower().endswith(image_extensions):
+                                full_path = os.path.join(root_dir, file)
+                                self.image_list.append(full_path)
+        self.display_image()
+        return self.image_list
+    def slide_show(self):
+            if self.slide == False:
+                    self.slide = True
+                    self.slide_show_b.configure(text="Stop")
+                    self.actual_slide_function()
+            else:
+                    self.slide = False
+                    self.slide_show_b.configure(text = "Slide Show")
+    def actual_slide_function(self):
+            if self.slide == True:
+                self.current_index = self.current_index+1
+                self.display_image()
+                self.app.after(2000,self.actual_slide_function)
+            
+                    
+                
+    def display_image(self):
+                """
+                Display the current image in the main frame.
+                """
+                self.image_path = self.image_list
+                try:
+                        previous_image = Image.open(self.image_path[self.current_index-1])
+                        pil_image = Image.open(self.image_path[self.current_index])
+                        next_image = Image.open(self.image_path[self.current_index+1])
+                # Getting Dimension of the Image
+                        dim = pil_image.size
+                        widht,height = dim
+                        if widht>595 or height>395:
+                                pil_image = pil_image.resize((550, 350), Image.Resampling.LANCZOS)
+                        # Resize image to fit the main frame while maintaining aspect ratio
+                # For newer versions of Pillow (10.0.0 and above):
+                        previous_image = previous_image.resize((100,100),Image.Resampling.LANCZOS)
+                        next_image = next_image.resize((100,100),Image.Resampling.LANCZOS)
+                        self.tk_image0 = ImageTk.PhotoImage(previous_image)
+                        self.tk_image = ImageTk.PhotoImage(pil_image)
+                        self.tk_image1 = ImageTk.PhotoImage(next_image)
+                        self.image_label.configure(image=self.tk_image,text="")
+                        self.image_1_label.configure(image=self.tk_image1,text="")
+                        self.image_0_label.configure(image=self.tk_image0,text="")
+                except Exception as e:
+                        self.current_index=0
+                        self.display_image()
+                        # i decided to hide this error because we cant handle the error with setting current_index to 0
+                        #👉👉 messagebox.showerror("Error", f"Failed to load image.\n{e}")
+
+    def show_previous_image(self):
+                """
+                Show the previous image in the list.
+                """
+                if self.image_list:
+                        # Show the previous image
+                        self.current_index = (self.current_index - 1) 
+                        self.display_image()
+    def show_next_image(self):
+                """
+                Show the next image in the list.
+                """
+                if self.image_list:
+                        self.current_index = (self.current_index + 1)
+                        self.display_image()
+                else:
+                        return
+
+if __name__ == "__main__":
+    Image_Viewer()
